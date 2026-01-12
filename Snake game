@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Snake Game</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #1a4d2e 0%, #2d5a3d 100%);
+        }
+        
+        .game-container {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            text-align: center;
+        }
+        
+        h1 {
+            color: #1a4d2e;
+            margin: 0 0 10px 0;
+        }
+        
+        .score {
+            font-size: 24px;
+            color: #333;
+            margin: 10px 0 20px 0;
+            font-weight: bold;
+        }
+        
+        #canvas {
+            border: 4px solid #2d5a3d;
+            background: #111;
+            display: block;
+            margin: 0 auto;
+        }
+        
+        .buttons {
+            margin: 20px 0;
+        }
+        
+        button {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 18px;
+            border-radius: 8px;
+            cursor: pointer;
+            margin: 5px;
+            font-weight: bold;
+        }
+        
+        button:hover {
+            background: #2563eb;
+        }
+        
+        button:active {
+            transform: scale(0.95);
+        }
+        
+        .start-btn {
+            background: #22c55e;
+        }
+        
+        .start-btn:hover {
+            background: #16a34a;
+        }
+        
+        .info {
+            color: #666;
+            margin-top: 15px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h1>🐍 Snake Game</h1>
+        <div class="score">Score: <span id="score">0</span></div>
+        <canvas id="canvas" width="400" height="400"></canvas>
+        <div class="buttons">
+            <button id="startBtn" class="start-btn">Start Game</button>
+            <button id="rotateBtn">Rotate Clockwise ↻</button>
+        </div>
+        <div class="info">
+            <p>Press any key or tap Rotate to turn clockwise</p>
+            <p>Eat eggs 🥚 to grow • Avoid walls and yourself!</p>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const scoreEl = document.getElementById('score');
+        const startBtn = document.getElementById('startBtn');
+        const rotateBtn = document.getElementById('rotateBtn');
+        
+        const GRID = 20;
+        const SIZE = 20;
+        
+        let snake, dir, food, score, gameRunning, gameInterval;
+        
+        function init() {
+            snake = [{x: 10, y: 10}];
+            dir = {x: 1, y: 0};
+            food = {x: 15, y: 15};
+            score = 0;
+            gameRunning = false;
+            scoreEl.textContent = '0';
+            startBtn.textContent = 'Start Game';
+            startBtn.style.display = 'inline-block';
+            rotateBtn.disabled = true;
+            draw();
+        }
+        
+        function start() {
+            if (gameRunning) return;
+            gameRunning = true;
+            startBtn.style.display = 'none';
+            rotateBtn.disabled = false;
+            if (gameInterval) clearInterval(gameInterval);
+            gameInterval = setInterval(update, 150);
+        }
+        
+        function rotate() {
+            if (!gameRunning) return;
+            // Clockwise rotation
+            const {x, y} = dir;
+            if (x === 1 && y === 0) dir = {x: 0, y: 1};      // Right → Down
+            else if (x === 0 && y === 1) dir = {x: -1, y: 0}; // Down → Left
+            else if (x === -1 && y === 0) dir = {x: 0, y: -1}; // Left → Up
+            else if (x === 0 && y === -1) dir = {x: 1, y: 0};  // Up → Right
+        }
+        
+        function update() {
+            const head = {x: snake[0].x + dir.x, y: snake[0].y + dir.y};
+            
+            // Check wall collision
+            if (head.x < 0 || head.x >= GRID || head.y < 0 || head.y >= GRID) {
+                gameOver();
+                return;
+            }
+            
+            // Check self collision
+            for (let segment of snake) {
+                if (segment.x === head.x && segment.y === head.y) {
+                    gameOver();
+                    return;
+                }
+            }
+            
+            snake.unshift(head);
+            
+            // Check food
+            if (head.x === food.x && head.y === food.y) {
+                score++;
+                scoreEl.textContent = score;
+                placeFood();
+            } else {
+                snake.pop();
+            }
+            
+            draw();
+        }
+        
+        function placeFood() {
+            do {
+                food = {
+                    x: Math.floor(Math.random() * GRID),
+                    y: Math.floor(Math.random() * GRID)
+                };
+            } while (snake.some(s => s.x === food.x && s.y === food.y));
+        }
+        
+        function draw() {
+            // Clear canvas
+            ctx.fillStyle = '#111111';
+            ctx.fillRect(0, 0, 400, 400);
+            
+            // Draw grid lines (optional, for visibility)
+            ctx.strokeStyle = '#222222';
+            ctx.lineWidth = 1;
+            for (let i = 0; i <= GRID; i++) {
+                ctx.beginPath();
+                ctx.moveTo(i * SIZE, 0);
+                ctx.lineTo(i * SIZE, 400);
+                ctx.stroke();
+                ctx.beginPath();
+                ctx.moveTo(0, i * SIZE);
+                ctx.lineTo(400, i * SIZE);
+                ctx.stroke();
+            }
+            
+            // Draw snake
+            for (let i = 0; i < snake.length; i++) {
+                ctx.fillStyle = i === 0 ? '#4ade80' : '#22c55e';
+                ctx.fillRect(
+                    snake[i].x * SIZE + 1, 
+                    snake[i].y * SIZE + 1, 
+                    SIZE - 2, 
+                    SIZE - 2
+                );
+            }
+            
+            // Draw food
+            ctx.fillStyle = '#fbbf24';
+            ctx.beginPath();
+            ctx.arc(
+                food.x * SIZE + SIZE / 2, 
+                food.y * SIZE + SIZE / 2, 
+                SIZE / 2 - 3, 
+                0, 
+                Math.PI * 2
+            );
+            ctx.fill();
+            
+            // Add border to food
+            ctx.strokeStyle = '#f59e0b';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+        }
+        
+        function gameOver() {
+            gameRunning = false;
+            clearInterval(gameInterval);
+            rotateBtn.disabled = true;
+            startBtn.textContent = 'Play Again';
+            startBtn.style.display = 'inline-block';
+            
+            // Game over message
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = 'white';
+            ctx.font = 'bold 40px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('Game Over!', canvas.width/2, canvas.height/2 - 20);
+            ctx.font = '24px Arial';
+            ctx.fillStyle = '#fbbf24';
+            ctx.fillText('Score: ' + score, canvas.width/2, canvas.height/2 + 20);
+        }
+        
+        // Events
+        startBtn.onclick = () => {
+            init();
+            start();
+        };
+        
+        rotateBtn.onclick = rotate;
+        
+        document.addEventListener('keydown', (e) => {
+            e.preventDefault();
+            rotate();
+        });
+        
+        canvas.addEventListener('click', rotate);
+        
+        // Initialize on load
+        init();
+    </script>
+</body>
+</html>
