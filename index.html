@@ -4,6 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Snake Game</title>
+
+    <!-- ✅ Google AdSense verification code -->
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5213191252787259" crossorigin="anonymous"></script>
+
     <style>
         body {
             margin: 0;
@@ -133,24 +137,21 @@
         
         function rotate() {
             if (!gameRunning) return;
-            // Clockwise rotation
             const {x, y} = dir;
-            if (x === 1 && y === 0) dir = {x: 0, y: 1};      // Right → Down
-            else if (x === 0 && y === 1) dir = {x: -1, y: 0}; // Down → Left
-            else if (x === -1 && y === 0) dir = {x: 0, y: -1}; // Left → Up
-            else if (x === 0 && y === -1) dir = {x: 1, y: 0};  // Up → Right
+            if (x === 1 && y === 0) dir = {x: 0, y: 1};
+            else if (x === 0 && y === 1) dir = {x: -1, y: 0};
+            else if (x === -1 && y === 0) dir = {x: 0, y: -1};
+            else if (x === 0 && y === -1) dir = {x: 1, y: 0};
         }
         
         function update() {
             const head = {x: snake[0].x + dir.x, y: snake[0].y + dir.y};
             
-            // Check wall collision
             if (head.x < 0 || head.x >= GRID || head.y < 0 || head.y >= GRID) {
                 gameOver();
                 return;
             }
             
-            // Check self collision
             for (let segment of snake) {
                 if (segment.x === head.x && segment.y === head.y) {
                     gameOver();
@@ -160,7 +161,6 @@
             
             snake.unshift(head);
             
-            // Check food
             if (head.x === food.x && head.y === food.y) {
                 score++;
                 scoreEl.textContent = score;
@@ -182,11 +182,9 @@
         }
         
         function draw() {
-            // Clear canvas
             ctx.fillStyle = '#111111';
             ctx.fillRect(0, 0, 400, 400);
             
-            // Draw grid lines (optional, for visibility)
             ctx.strokeStyle = '#222222';
             ctx.lineWidth = 1;
             for (let i = 0; i <= GRID; i++) {
@@ -200,7 +198,6 @@
                 ctx.stroke();
             }
             
-            // Draw snake
             for (let i = 0; i < snake.length; i++) {
                 ctx.fillStyle = i === 0 ? '#4ade80' : '#22c55e';
                 ctx.fillRect(
@@ -211,7 +208,6 @@
                 );
             }
             
-            // Draw food
             ctx.fillStyle = '#fbbf24';
             ctx.beginPath();
             ctx.arc(
@@ -223,7 +219,6 @@
             );
             ctx.fill();
             
-            // Add border to food
             ctx.strokeStyle = '#f59e0b';
             ctx.lineWidth = 2;
             ctx.stroke();
@@ -236,7 +231,6 @@
             startBtn.textContent = 'Play Again';
             startBtn.style.display = 'inline-block';
             
-            // Game over message
             ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
             ctx.fillStyle = 'white';
@@ -248,7 +242,6 @@
             ctx.fillText('Score: ' + score, canvas.width/2, canvas.height/2 + 20);
         }
         
-        // Events
         startBtn.onclick = () => {
             init();
             start();
@@ -263,7 +256,6 @@
         
         canvas.addEventListener('click', rotate);
         
-        // Initialize on load
         init();
     </script>
 </body>
